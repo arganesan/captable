@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 const KV_KEY = 'captable_data';
 
@@ -15,6 +15,13 @@ const DEFAULT_DATA = {
     ]
 };
 
+function getRedis() {
+    const url = process.env.KV_REST_API_URL || process.env.REDIS_URL;
+    const token = process.env.KV_REST_API_TOKEN || process.env.REDIS_TOKEN;
+    if (!url || !token) return null;
+    return new Redis({ url, token });
+}
+
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -24,9 +31,25 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
+    const redis = getRedis();
+
+    if (!redis) {
+        if (req.method === 'GET') {
+            return res.status(200).json(DEFAULT_DATA);
+        }
+        // Debug: show which env vars exist
+        const envKeys = Object.keys(process.env).filter(k =>
+            k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
+        );
+        return res.status(503).json({
+            error: 'Redis not connected',
+            availableEnvKeys: envKeys
+        });
+    }
+
     try {
         if (req.method === 'GET') {
-            const data = await kv.get(KV_KEY);
+            const data = await redis.get(KV_KEY);
             return res.status(200).json(data || DEFAULT_DATA);
         }
 
@@ -35,18 +58,16 @@ export default async function handler(req, res) {
             if (!body || !Array.isArray(body.shareholders)) {
                 return res.status(400).json({ error: 'Invalid data' });
             }
-            await kv.set(KV_KEY, body);
+            await redis.set(KV_KEY, JSON.stringify(body));
             return res.status(200).json({ ok: true });
         }
 
         res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
-        console.error('KV error:', err);
-        res.status(500).json({
-            error: err.message || 'Server error',
-            hasKvUrl: !!process.env.KV_REST_API_URL,
-            hasKvToken: !!process.env.KV_REST_API_TOKEN,
-            hasKvRedisUrl: !!process.env.KV_URL
-        });
+        console.error('Redis error:', err);
+        const envKeys = Object.keys(process.env).filter(k =>
+            k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
+        );
+        res.status(500).json({ error: err.message, availableEnvKeys: envKeys });
     }
 }
