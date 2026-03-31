@@ -108,6 +108,9 @@
         tbody tr:hover { background: #111; }
         tbody tr.dragging { opacity: 0.3; }
         tbody tr.drag-over { border-top: 2px solid #4ade80; }
+        tbody tr.options-row { background: #050a05; border-top: 1px solid #1a1a1a; }
+        tbody tr.options-row:hover { background: #0a100a; }
+        tbody tr.options-row td { color: #4ade80; }
 
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; }
         .badge-founder { background: #1a1a2e; color: #818cf8; }
@@ -226,12 +229,25 @@
 <script>
     const PASSWORD = '999999';
     const API_URL = '/api/data';
-    const HOLDER_TYPES = ['Founder', 'Investor', 'Options', 'Advisor', 'Employee'];
-    const COLORS = ['#818cf8','#38bdf8','#4ade80','#fbbf24','#c084fc','#f472b6','#fb923c','#34d399','#a78bfa','#f87171'];
+    const HOLDER_TYPES = ['Founder', 'Investor', 'Advisor', 'Employee'];
+    const COLORS = ['#818cf8','#38bdf8','#fbbf24','#c084fc','#f472b6','#fb923c','#34d399','#a78bfa','#f87171','#e879f9'];
+    const OPTIONS_COLOR = '#4ade80';
 
     let data;
-    let editMode = 'shares'; // 'shares' or 'ownership'
+    let editMode = 'shares';
     let saveTimeout = null;
+
+    // --- Computed: options pool shares = totalAuthorized - sum(shareholders) ---
+    function getShareholderTotal() {
+        return data.shareholders.reduce((s, h) => s + h.shares, 0);
+    }
+    function getOptionsShares() {
+        return Math.max(0, data.totalAuthorized - getShareholderTotal());
+    }
+    // Total issued = shareholders + options pool
+    function getTotalIssued() {
+        return data.totalAuthorized;
+    }
 
     // --- API ---
     async function loadData() {
@@ -283,14 +299,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     totalAuthorized: 10000000,
-                    optionPool: 1500000,
+                    optionPool: 0,
                     shareholders: [
-                        { name: 'Alice Johnson',    type: 'Founder',   shares: 3000000, investment: '$0' },
-                        { name: 'Bob Smith',         type: 'Founder',   shares: 2000000, investment: '$0' },
-                        { name: 'VC Fund I',         type: 'Investor',  shares: 1500000, investment: '$1,500,000' },
-                        { name: 'Angel Group',       type: 'Investor',  shares: 500000,  investment: '$250,000' },
-                        { name: 'Carol Davis',       type: 'Options',   shares: 350000,  investment: '$0' },
-                        { name: 'Dan Lee',           type: 'Employee',  shares: 150000,  investment: '$0' },
+                        { name: 'Alice Johnson', type: 'Founder',  shares: 3000000, investment: '$0' },
+                        { name: 'Bob Smith',     type: 'Founder',  shares: 2000000, investment: '$0' },
+                        { name: 'VC Fund I',     type: 'Investor', shares: 1500000, investment: '$1,500,000' },
+                        { name: 'Angel Group',   type: 'Investor', shares: 500000,  investment: '$250,000' },
+                        { name: 'Carol Davis',   type: 'Employee', shares: 350000,  investment: '$0' },
+                        { name: 'Dan Lee',       type: 'Employee', shares: 150000,  investment: '$0' },
                     ]
                 })
             });
@@ -339,28 +355,25 @@
     // --- Render ---
     function renderAll() { renderSummary(); renderChart(); renderTable(); }
 
-    function getTotalIssued() { return data.shareholders.reduce((s, h) => s + h.shares, 0); }
-
     function renderSummary() {
-        const total = getTotalIssued();
+        const shTotal = getShareholderTotal();
+        const optShares = getOptionsShares();
+        const optPct = data.totalAuthorized > 0 ? ((optShares / data.totalAuthorized) * 100).toFixed(1) : '0.0';
         document.getElementById('summary-cards').innerHTML = `
             <div class="card">
-                <div class="label">authorized</div>
+                <div class="label">total authorized</div>
                 <input class="edit-summary" type="text" value="${data.totalAuthorized.toLocaleString()}"
-                    onchange="data.totalAuthorized=parseInt(this.value.replace(/,/g,''))||0;saveData();renderSummary();"
+                    onchange="data.totalAuthorized=parseInt(this.value.replace(/,/g,''))||0;saveData();renderAll();"
                     onfocus="this.value=this.value.replace(/,/g,'');"
                     onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();">
             </div>
             <div class="card">
-                <div class="label">issued</div>
-                <div class="value">${total.toLocaleString()}</div>
+                <div class="label">allocated to holders</div>
+                <div class="value">${shTotal.toLocaleString()}</div>
             </div>
             <div class="card">
-                <div class="label">option pool</div>
-                <input class="edit-summary" type="text" value="${data.optionPool.toLocaleString()}"
-                    onchange="data.optionPool=parseInt(this.value.replace(/,/g,''))||0;saveData();renderSummary();"
-                    onfocus="this.value=this.value.replace(/,/g,'');"
-                    onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();">
+                <div class="label">options pool (auto)</div>
+                <div class="value" style="color:#4ade80">${optShares.toLocaleString()} <span style="font-size:0.7rem;color:#555">(${optPct}%)</span></div>
             </div>
             <div class="card">
                 <div class="label">holders</div>
@@ -372,19 +385,28 @@
         const svg = document.getElementById('pie-chart');
         const legend = document.getElementById('legend');
         svg.innerHTML = ''; legend.innerHTML = '';
-        const total = getTotalIssued();
+        const total = data.totalAuthorized;
         if (total === 0) return;
+
+        // Build slices: shareholders + options pool
+        const slices = data.shareholders.map((h, i) => ({
+            name: h.name, shares: h.shares, color: COLORS[i % COLORS.length]
+        }));
+        const optShares = getOptionsShares();
+        if (optShares > 0) {
+            slices.push({ name: 'Options Pool', shares: optShares, color: OPTIONS_COLOR });
+        }
+
         let cum = 0;
         const cx = 100, cy = 100, r = 90;
 
-        data.shareholders.forEach((h, i) => {
-            const pct = h.shares / total;
+        slices.forEach(sl => {
+            const pct = sl.shares / total;
             if (pct <= 0) return;
-            const color = COLORS[i % COLORS.length];
 
-            if (data.shareholders.length === 1) {
+            if (slices.length === 1) {
                 const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r); c.setAttribute('fill', color);
+                c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r); c.setAttribute('fill', sl.color);
                 svg.appendChild(c);
             } else {
                 const a1 = cum * 2 * Math.PI - Math.PI / 2;
@@ -393,33 +415,32 @@
                 const la = pct > 0.5 ? 1 : 0;
                 const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 p.setAttribute('d', `M${cx},${cy} L${cx+r*Math.cos(a1)},${cy+r*Math.sin(a1)} A${r},${r} 0 ${la},1 ${cx+r*Math.cos(a2)},${cy+r*Math.sin(a2)} Z`);
-                p.setAttribute('fill', color);
+                p.setAttribute('fill', sl.color);
                 svg.appendChild(p);
-                if (!cum) cum += pct; // fallback
             }
 
             legend.innerHTML += `<div class="legend-item">
-                <div class="legend-dot" style="background:${color}"></div>
-                <span>${esc(h.name)} ${(pct*100).toFixed(1)}%</span>
+                <div class="legend-dot" style="background:${sl.color}"></div>
+                <span>${esc(sl.name)} ${(pct*100).toFixed(1)}%</span>
             </div>`;
         });
     }
 
     function badgeCls(type) {
-        const map = { 'Founder':'badge-founder', 'Investor':'badge-investor', 'Options':'badge-options', 'Advisor':'badge-advisor', 'Employee':'badge-employee' };
+        const map = { 'Founder':'badge-founder', 'Investor':'badge-investor', 'Advisor':'badge-advisor', 'Employee':'badge-employee' };
         return map[type] || 'badge-founder';
     }
 
     function renderTable() {
         const tbody = document.getElementById('table-body');
-        const total = getTotalIssued();
+        const total = data.totalAuthorized;
         const sharesEditable = editMode === 'shares';
 
-        // Update column headers
         document.getElementById('col-shares').textContent = sharesEditable ? 'shares (edit)' : 'shares';
         document.getElementById('col-pct').textContent = sharesEditable ? 'ownership %' : 'ownership % (edit)';
 
-        tbody.innerHTML = data.shareholders.map((h, i) => {
+        // Regular shareholder rows
+        let html = data.shareholders.map((h, i) => {
             const pct = total > 0 ? ((h.shares / total) * 100) : 0;
             const typeOpts = HOLDER_TYPES.map(t => `<option value="${t}" ${t===h.type?'selected':''}>${t}</option>`).join('');
 
@@ -451,6 +472,21 @@
                 </td>
             </tr>`;
         }).join('');
+
+        // Permanent options pool row
+        const optShares = getOptionsShares();
+        const optPct = total > 0 ? ((optShares / total) * 100) : 0;
+        html += `<tr class="options-row">
+            <td></td>
+            <td style="font-weight:600;">Options Pool</td>
+            <td><span class="badge badge-options">Options</span></td>
+            <td style="font-weight:600;">${optShares.toLocaleString()}</td>
+            <td style="font-weight:600;">${optPct.toFixed(2)}%</td>
+            <td style="color:#333;">// auto-calculated</td>
+            <td></td>
+        </tr>`;
+
+        tbody.innerHTML = html;
         initDragAndDrop();
     }
 
@@ -463,28 +499,21 @@
     }
 
     function updateShares(i, value) {
-        data.shareholders[i].shares = parseInt(value.replace(/,/g, '')) || 0;
+        const newShares = parseInt(value.replace(/,/g, '')) || 0;
+        // Don't allow shareholders to exceed total authorized
+        const othersTotal = getShareholderTotal() - data.shareholders[i].shares;
+        data.shareholders[i].shares = Math.min(newShares, data.totalAuthorized - othersTotal);
         saveData(); renderAll();
     }
 
     function updateOwnership(i, value) {
         const newPct = parseFloat(value) || 0;
-        const total = getTotalIssued();
-        if (total === 0) return;
-        // Recalculate this shareholder's shares to match the desired %
-        // Formula: new_shares = (newPct / 100) * total
-        // But total includes this shareholder's old shares, so we need:
-        // total_others = total - old_shares
-        // new_shares = (newPct / (100 - newPct)) * total_others
-        // This ensures the % is correct relative to the new total
-        const totalOthers = total - data.shareholders[i].shares;
-        if (newPct >= 100) {
-            data.shareholders[i].shares = totalOthers * 99; // cap at ~99%
-        } else if (newPct <= 0) {
-            data.shareholders[i].shares = 0;
-        } else {
-            data.shareholders[i].shares = Math.round((newPct / (100 - newPct)) * totalOthers);
-        }
+        if (newPct <= 0) { data.shareholders[i].shares = 0; saveData(); renderAll(); return; }
+        // Cap: can't exceed what's available (totalAuthorized - others' shares)
+        const othersTotal = getShareholderTotal() - data.shareholders[i].shares;
+        const maxShares = data.totalAuthorized - othersTotal;
+        const desired = Math.round((newPct / 100) * data.totalAuthorized);
+        data.shareholders[i].shares = Math.min(desired, maxShares);
         saveData(); renderAll();
     }
 
@@ -492,7 +521,7 @@
         data.shareholders.push({ name: 'New Holder', type: 'Founder', shares: 0, investment: '$0' });
         saveData(); renderAll();
         setTimeout(() => {
-            const inputs = document.querySelectorAll('#table-body tr:last-child .cell-input');
+            const inputs = document.querySelectorAll('#table-body tr:not(.options-row):last-of-type .cell-input');
             if (inputs[0]) { inputs[0].focus(); inputs[0].select(); }
         }, 50);
     }
@@ -515,7 +544,7 @@
     function initDragAndDrop() {
         const tbody = document.getElementById('table-body');
         let dragIdx = null;
-        tbody.querySelectorAll('tr').forEach(row => {
+        tbody.querySelectorAll('tr:not(.options-row)').forEach(row => {
             row.addEventListener('dragstart', e => {
                 dragIdx = parseInt(row.dataset.index);
                 row.classList.add('dragging');
