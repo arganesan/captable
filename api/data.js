@@ -16,10 +16,40 @@ const DEFAULT_DATA = {
 };
 
 function getRedis() {
-    const url = process.env.KV_REST_API_URL || process.env.REDIS_URL;
-    const token = process.env.KV_REST_API_TOKEN || process.env.REDIS_TOKEN;
-    if (!url || !token) return null;
-    return new Redis({ url, token });
+    // Try every possible env var combination Vercel might use
+    const urlCandidates = [
+        process.env.KV_REST_API_URL,
+        process.env.REDIS_REST_API_URL,
+        process.env.UPSTASH_REDIS_REST_URL,
+        process.env.REDIS_URL,
+    ];
+    const tokenCandidates = [
+        process.env.KV_REST_API_TOKEN,
+        process.env.REDIS_REST_API_TOKEN,
+        process.env.UPSTASH_REDIS_REST_TOKEN,
+        process.env.REDIS_TOKEN,
+    ];
+
+    const url = urlCandidates.find(v => v);
+    const token = tokenCandidates.find(v => v);
+
+    if (url && token) {
+        return new Redis({ url, token });
+    }
+
+    // If only URL exists, try fromEnv as last resort
+    try {
+        return Redis.fromEnv();
+    } catch (e) {}
+
+    return null;
+}
+
+// Debug helper
+function getRedisEnvKeys() {
+    return Object.keys(process.env).filter(k =>
+        k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
+    );
 }
 
 export default async function handler(req, res) {
@@ -37,13 +67,9 @@ export default async function handler(req, res) {
         if (req.method === 'GET') {
             return res.status(200).json(DEFAULT_DATA);
         }
-        // Debug: show which env vars exist
-        const envKeys = Object.keys(process.env).filter(k =>
-            k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
-        );
         return res.status(503).json({
-            error: 'Redis not connected',
-            availableEnvKeys: envKeys
+            error: 'Redis not connected — no valid URL+TOKEN pair found',
+            availableEnvKeys: getRedisEnvKeys()
         });
     }
 
@@ -65,9 +91,9 @@ export default async function handler(req, res) {
         res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
         console.error('Redis error:', err);
-        const envKeys = Object.keys(process.env).filter(k =>
-            k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
-        );
-        res.status(500).json({ error: err.message, availableEnvKeys: envKeys });
+        res.status(500).json({
+            error: err.message,
+            availableEnvKeys: getRedisEnvKeys()
+        });
     }
 }
