@@ -16,40 +16,28 @@ const DEFAULT_DATA = {
 };
 
 function getRedis() {
-    // Try every possible env var combination Vercel might use
-    const urlCandidates = [
-        process.env.KV_REST_API_URL,
-        process.env.REDIS_REST_API_URL,
-        process.env.UPSTASH_REDIS_REST_URL,
-        process.env.REDIS_URL,
-    ];
-    const tokenCandidates = [
-        process.env.KV_REST_API_TOKEN,
-        process.env.REDIS_REST_API_TOKEN,
-        process.env.UPSTASH_REDIS_REST_TOKEN,
-        process.env.REDIS_TOKEN,
-    ];
-
-    const url = urlCandidates.find(v => v);
-    const token = tokenCandidates.find(v => v);
-
-    if (url && token) {
-        return new Redis({ url, token });
+    // Direct REST API vars (ideal)
+    const restUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const restToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (restUrl && restToken) {
+        return new Redis({ url: restUrl, token: restToken });
     }
 
-    // If only URL exists, try fromEnv as last resort
-    try {
-        return Redis.fromEnv();
-    } catch (e) {}
+    // Parse REDIS_URL (redis://default:TOKEN@hostname:port) to derive REST API creds
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+        try {
+            const parsed = new URL(redisUrl);
+            const host = parsed.hostname;           // e.g. us1-xxx.upstash.io
+            const token = parsed.password;           // the auth token
+            const restApiUrl = `https://${host}`;
+            if (host && token) {
+                return new Redis({ url: restApiUrl, token });
+            }
+        } catch (e) {}
+    }
 
     return null;
-}
-
-// Debug helper
-function getRedisEnvKeys() {
-    return Object.keys(process.env).filter(k =>
-        k.includes('REDIS') || k.includes('KV') || k.includes('UPSTASH')
-    );
 }
 
 export default async function handler(req, res) {
@@ -64,13 +52,8 @@ export default async function handler(req, res) {
     const redis = getRedis();
 
     if (!redis) {
-        if (req.method === 'GET') {
-            return res.status(200).json(DEFAULT_DATA);
-        }
-        return res.status(503).json({
-            error: 'Redis not connected — no valid URL+TOKEN pair found',
-            availableEnvKeys: getRedisEnvKeys()
-        });
+        if (req.method === 'GET') return res.status(200).json(DEFAULT_DATA);
+        return res.status(503).json({ error: 'Redis not connected' });
     }
 
     try {
@@ -91,9 +74,6 @@ export default async function handler(req, res) {
         res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
         console.error('Redis error:', err);
-        res.status(500).json({
-            error: err.message,
-            availableEnvKeys: getRedisEnvKeys()
-        });
+        res.status(500).json({ error: err.message });
     }
 }
