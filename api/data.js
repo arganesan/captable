@@ -6,12 +6,12 @@ const DEFAULT_DATA = {
     totalAuthorized: 10000000,
     optionPool: 1500000,
     shareholders: [
-        { name: 'Alice Johnson (Founder)',  type: 'Common',         shares: 3000000, investment: '$0' },
-        { name: 'Bob Smith (Founder)',      type: 'Common',         shares: 2000000, investment: '$0' },
-        { name: 'Venture Capital Fund I',   type: 'Preferred A',    shares: 1500000, investment: '$1,500,000' },
-        { name: 'Angel Investor Group',     type: 'Preferred Seed', shares: 500000,  investment: '$250,000' },
-        { name: 'Carol Davis (Employee)',   type: 'Option',         shares: 350000,  investment: '$0' },
-        { name: 'Dan Lee (Employee)',       type: 'Option',         shares: 150000,  investment: '$0' },
+        { name: 'Alice Johnson',  type: 'Founder',   shares: 3000000, investment: '$0' },
+        { name: 'Bob Smith',      type: 'Founder',   shares: 2000000, investment: '$0' },
+        { name: 'VC Fund I',      type: 'Investor',  shares: 1500000, investment: '$1,500,000' },
+        { name: 'Angel Group',    type: 'Investor',  shares: 500000,  investment: '$250,000' },
+        { name: 'Carol Davis',    type: 'Options',   shares: 350000,  investment: '$0' },
+        { name: 'Dan Lee',        type: 'Employee',  shares: 150000,  investment: '$0' },
     ]
 };
 

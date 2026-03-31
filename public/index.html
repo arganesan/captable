@@ -4,138 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cap Table</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: 'Source Code Pro', monospace;
+            background: #000;
+            color: #a0a0a0;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Login Screen */
+        /* Login */
         #login-screen { text-align: center; padding: 2rem; }
-        #login-screen h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #f8fafc; }
-        #login-screen p { color: #94a3b8; margin-bottom: 2rem; }
+        #login-screen h1 { font-size: 1.6rem; color: #e0e0e0; margin-bottom: 0.25rem; letter-spacing: 0.1em; }
+        #login-screen .sub { color: #555; margin-bottom: 2rem; font-size: 0.8rem; }
         .login-box {
-            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 4px;
             padding: 2rem; width: 360px; max-width: 90vw;
         }
-        .login-box label { display: block; text-align: left; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .login-box label { display: block; text-align: left; font-size: 0.75rem; color: #555; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.1em; }
         .login-box input {
-            width: 100%; padding: 0.75rem 1rem; border: 1px solid #334155; border-radius: 8px;
-            background: #0f172a; color: #f8fafc; font-size: 1rem; margin-bottom: 1rem; outline: none;
+            width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #1a1a1a; border-radius: 3px;
+            background: #000; color: #4ade80; font-size: 0.95rem; margin-bottom: 1rem; outline: none;
+            font-family: 'Source Code Pro', monospace; letter-spacing: 0.05em;
         }
-        .login-box input:focus { border-color: #6366f1; }
+        .login-box input:focus { border-color: #333; }
+        .login-box input::placeholder { color: #2a2a2a; }
         .login-box button {
-            width: 100%; padding: 0.75rem; background: #6366f1; color: #fff; border: none;
-            border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+            width: 100%; padding: 0.7rem; background: #111; color: #4ade80; border: 1px solid #222;
+            border-radius: 3px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            font-family: 'Source Code Pro', monospace; text-transform: uppercase; letter-spacing: 0.15em;
         }
-        .login-box button:hover { background: #4f46e5; }
-        .error-msg { color: #f87171; font-size: 0.85rem; margin-top: 0.75rem; display: none; }
+        .login-box button:hover { background: #1a1a1a; border-color: #4ade80; }
+        .error-msg { color: #ef4444; font-size: 0.75rem; margin-top: 0.75rem; display: none; }
 
         /* Dashboard */
         #dashboard { display: none; width: 100%; min-height: 100vh; padding: 2rem; max-width: 1100px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 0.5rem; }
-        .header h1 { font-size: 1.6rem; color: #f8fafc; }
-        .header-actions { display: flex; gap: 0.5rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+        .header h1 { font-size: 1.3rem; color: #e0e0e0; letter-spacing: 0.1em; }
+        .header-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
         .btn {
-            padding: 0.5rem 1rem; border: 1px solid #334155; border-radius: 8px;
-            cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+            padding: 0.4rem 0.8rem; border: 1px solid #222; border-radius: 3px;
+            cursor: pointer; font-size: 0.7rem; font-family: 'Source Code Pro', monospace;
+            text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.15s;
         }
-        .btn-ghost { background: #1e293b; color: #94a3b8; }
-        .btn-ghost:hover { background: #334155; }
-        .btn-primary { background: #6366f1; color: #fff; border-color: #6366f1; }
-        .btn-primary:hover { background: #4f46e5; }
-        .btn-danger { background: transparent; color: #f87171; border-color: #f87171; }
-        .btn-danger:hover { background: #f871711a; }
-        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+        .btn-ghost { background: #0a0a0a; color: #555; }
+        .btn-ghost:hover { color: #888; border-color: #333; }
+        .btn-primary { background: #0a0a0a; color: #4ade80; border-color: #1a3a1a; }
+        .btn-primary:hover { background: #111; border-color: #4ade80; }
+        .btn-danger { background: #0a0a0a; color: #555; border-color: #1a1a1a; }
+        .btn-danger:hover { color: #ef4444; border-color: #ef4444; }
+        .btn-toggle { background: #0a0a0a; color: #888; border-color: #222; }
+        .btn-toggle.active { color: #4ade80; border-color: #4ade80; }
 
-        /* Summary Cards */
-        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.25rem; }
-        .card .label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
-        .card .value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
-
-        /* Editable Summary */
+        /* Summary */
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+        .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 4px; padding: 1rem; }
+        .card .label { font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.3rem; }
+        .card .value { font-size: 1.3rem; font-weight: 700; color: #e0e0e0; }
         .card input.edit-summary {
-            background: transparent; border: 1px solid transparent; color: #f8fafc;
-            font-size: 1.5rem; font-weight: 700; width: 100%; padding: 0.1rem 0; border-radius: 4px;
+            background: transparent; border: 1px solid transparent; color: #e0e0e0;
+            font-size: 1.3rem; font-weight: 700; width: 100%; padding: 0; border-radius: 2px;
+            font-family: 'Source Code Pro', monospace;
         }
-        .card input.edit-summary:hover { border-color: #334155; }
-        .card input.edit-summary:focus { border-color: #6366f1; outline: none; background: #0f172a; }
+        .card input.edit-summary:hover { border-color: #1a1a1a; }
+        .card input.edit-summary:focus { border-color: #333; outline: none; background: #000; }
 
-        /* Pie Chart */
+        /* Chart */
         .chart-section {
-            background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.25rem;
-            margin-bottom: 2rem; display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap;
+            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 4px; padding: 1rem;
+            margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap;
         }
-        .chart-section h3 { width: 100%; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .legend { display: flex; flex-direction: column; gap: 0.5rem; }
-        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .chart-section h3 { width: 100%; font-size: 0.7rem; font-weight: 600; color: #444; text-transform: uppercase; letter-spacing: 0.12em; }
+        .legend { display: flex; flex-direction: column; gap: 0.4rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #888; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
         /* Table */
-        .table-container { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
-        .table-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-bottom: 1px solid #334155; }
-        .table-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .table-container { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 4px; overflow: hidden; }
+        .table-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 1rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .table-header h3 { font-size: 0.7rem; font-weight: 600; color: #444; text-transform: uppercase; letter-spacing: 0.12em; }
+        .toggle-group { display: flex; gap: 0; }
+        .toggle-group .btn { border-radius: 0; margin-left: -1px; }
+        .toggle-group .btn:first-child { border-radius: 3px 0 0 3px; margin-left: 0; }
+        .toggle-group .btn:last-child { border-radius: 0 3px 3px 0; }
+
         table { width: 100%; border-collapse: collapse; }
         thead th {
-            text-align: left; padding: 0.75rem 1rem; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #334155; font-weight: 600;
+            text-align: left; padding: 0.6rem 0.8rem; font-size: 0.6rem; text-transform: uppercase;
+            letter-spacing: 0.12em; color: #333; border-bottom: 1px solid #1a1a1a; font-weight: 600;
         }
-        tbody td { padding: 0.6rem 1rem; font-size: 0.9rem; }
-        tbody tr { border-bottom: 1px solid #334155; transition: background 0.15s; }
+        tbody td { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+        tbody tr { border-bottom: 1px solid #111; transition: background 0.1s; }
         tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: #334155; }
-        tbody tr.dragging { opacity: 0.4; }
-        tbody tr.drag-over { border-top: 2px solid #6366f1; }
+        tbody tr:hover { background: #111; }
+        tbody tr.dragging { opacity: 0.3; }
+        tbody tr.drag-over { border-top: 2px solid #4ade80; }
 
-        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-        .badge-common { background: #312e81; color: #a5b4fc; }
-        .badge-preferred { background: #164e63; color: #67e8f9; }
-        .badge-option { background: #365314; color: #86efac; }
-        .pct { color: #6366f1; font-weight: 600; }
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; }
+        .badge-founder { background: #1a1a2e; color: #818cf8; }
+        .badge-investor { background: #0a1a2a; color: #38bdf8; }
+        .badge-options { background: #0a1a0a; color: #4ade80; }
+        .badge-advisor { background: #1a1a0a; color: #fbbf24; }
+        .badge-employee { background: #1a0a1a; color: #c084fc; }
+        .pct { color: #4ade80; font-weight: 600; }
 
-        /* Inline editable cells */
+        /* Cell inputs */
         .cell-input {
-            background: transparent; border: 1px solid transparent; color: #e2e8f0;
-            font-size: 0.9rem; padding: 0.2rem 0.4rem; width: 100%; border-radius: 4px;
-            font-family: inherit;
+            background: transparent; border: 1px solid transparent; color: #a0a0a0;
+            font-size: 0.8rem; padding: 0.15rem 0.3rem; width: 100%; border-radius: 2px;
+            font-family: 'Source Code Pro', monospace;
         }
-        .cell-input:hover { border-color: #334155; }
-        .cell-input:focus { border-color: #6366f1; outline: none; background: #0f172a; }
+        .cell-input:hover { border-color: #1a1a1a; }
+        .cell-input:focus { border-color: #333; outline: none; background: #000; color: #e0e0e0; }
+        .cell-input.editable-pct { color: #4ade80; }
+        .cell-input.editable-pct:focus { color: #4ade80; }
         td select.cell-input {
             appearance: none; cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 6px center; padding-right: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 4px center; padding-right: 18px;
         }
-        td select.cell-input option { background: #1e293b; color: #e2e8f0; }
+        td select.cell-input option { background: #0a0a0a; color: #a0a0a0; }
 
-        /* Drag handle */
-        .drag-handle {
-            cursor: grab; color: #475569; font-size: 1rem; user-select: none;
-            padding: 0 0.3rem; display: inline-block;
-        }
+        .drag-handle { cursor: grab; color: #2a2a2a; font-size: 0.85rem; user-select: none; }
+        .drag-handle:hover { color: #555; }
         .drag-handle:active { cursor: grabbing; }
 
-        /* Row actions */
-        .row-actions { display: flex; gap: 0.3rem; }
+        .row-actions { display: flex; gap: 0.2rem; }
         .icon-btn {
-            background: none; border: none; cursor: pointer; color: #64748b;
-            font-size: 1rem; padding: 0.2rem 0.4rem; border-radius: 4px; transition: all 0.15s;
+            background: none; border: none; cursor: pointer; color: #2a2a2a;
+            font-size: 0.85rem; padding: 0.15rem 0.3rem; border-radius: 2px; transition: all 0.1s;
+            font-family: 'Source Code Pro', monospace;
         }
-        .icon-btn:hover { color: #f87171; background: #f871711a; }
-        .icon-btn.move-btn:hover { color: #6366f1; background: #6366f11a; }
+        .icon-btn:hover { color: #ef4444; background: #1a0a0a; }
+        .icon-btn.move-btn:hover { color: #4ade80; background: #0a1a0a; }
 
         /* Save indicator */
         .save-indicator {
-            position: fixed; bottom: 1.5rem; right: 1.5rem; background: #22c55e; color: #fff;
-            padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+            position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 0.4rem 0.8rem;
+            border-radius: 3px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
+            text-transform: uppercase; opacity: 0; transition: opacity 0.3s;
+            pointer-events: none; z-index: 100; font-family: 'Source Code Pro', monospace;
+            border: 1px solid;
         }
         .save-indicator.show { opacity: 1; }
 
@@ -143,58 +161,59 @@
         @media (max-width: 700px) {
             #dashboard { padding: 1rem; }
             .table-container { overflow-x: auto; }
-            table { min-width: 650px; }
+            table { min-width: 700px; }
         }
     </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="login-screen">
-    <h1>Cap Table</h1>
-    <p>Enter password to view</p>
+    <h1>CAP TABLE</h1>
+    <p class="sub">// authenticated access only</p>
     <div class="login-box">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter password" autofocus>
-        <button onclick="login()">Unlock</button>
-        <div class="error-msg" id="error-msg">Incorrect password. Try again.</div>
+        <label>password</label>
+        <input type="password" id="password" placeholder="enter password" autofocus>
+        <button onclick="login()">authenticate</button>
+        <div class="error-msg" id="error-msg">// access denied</div>
     </div>
 </div>
 
-<!-- Dashboard -->
 <div id="dashboard">
     <div class="header">
-        <h1>Cap Table</h1>
+        <h1>// CAP TABLE</h1>
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="addShareholder()">+ Add Shareholder</button>
-            <button class="btn btn-danger btn-sm" onclick="resetData()">Reset to Default</button>
-            <button class="btn btn-ghost" onclick="logout()">Lock</button>
+            <button class="btn btn-primary" onclick="addShareholder()">+ add</button>
+            <button class="btn btn-danger" onclick="resetData()">reset</button>
+            <button class="btn btn-ghost" onclick="logout()">lock</button>
         </div>
     </div>
 
     <div class="summary" id="summary-cards"></div>
 
     <div class="chart-section">
-        <h3>Ownership Breakdown</h3>
+        <h3>// ownership breakdown</h3>
         <svg width="200" height="200" viewBox="0 0 200 200" id="pie-chart"></svg>
         <div class="legend" id="legend"></div>
     </div>
 
     <div class="table-container">
         <div class="table-header">
-            <h3>Shareholders</h3>
-            <span style="font-size:0.75rem;color:#64748b;">Drag rows to reorder</span>
+            <h3>// shareholders</h3>
+            <div class="toggle-group">
+                <button class="btn btn-toggle active" id="toggle-shares" onclick="setMode('shares')">shares</button>
+                <button class="btn btn-toggle" id="toggle-ownership" onclick="setMode('ownership')">ownership %</button>
+            </div>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th style="width:30px;"></th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Shares</th>
-                    <th>Ownership %</th>
-                    <th>Investment</th>
-                    <th style="width:60px;"></th>
+                    <th style="width:25px;"></th>
+                    <th>name</th>
+                    <th>type</th>
+                    <th id="col-shares">shares</th>
+                    <th id="col-pct">ownership %</th>
+                    <th>investment</th>
+                    <th style="width:55px;"></th>
                 </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -202,18 +221,19 @@
     </div>
 </div>
 
-<div class="save-indicator" id="save-indicator">Saved</div>
+<div class="save-indicator" id="save-indicator"></div>
 
 <script>
     const PASSWORD = '999999';
     const API_URL = '/api/data';
-
-    const SHARE_TYPES = ['Common', 'Preferred A', 'Preferred Seed', 'Preferred B', 'Option', 'Warrant', 'Note'];
-    const COLORS = ['#6366f1','#8b5cf6','#06b6d4','#22d3ee','#22c55e','#84cc16','#f59e0b','#ef4444','#ec4899','#14b8a6'];
+    const HOLDER_TYPES = ['Founder', 'Investor', 'Options', 'Advisor', 'Employee'];
+    const COLORS = ['#818cf8','#38bdf8','#4ade80','#fbbf24','#c084fc','#f472b6','#fb923c','#34d399','#a78bfa','#f87171'];
 
     let data;
+    let editMode = 'shares'; // 'shares' or 'ownership'
     let saveTimeout = null;
 
+    // --- API ---
     async function loadData() {
         try {
             const res = await fetch(API_URL);
@@ -221,13 +241,12 @@
             data = await res.json();
         } catch (e) {
             console.error('Load error:', e);
-            showSaveIndicator('Failed to load', true);
+            showSave('failed to load', true);
         }
     }
 
     async function saveData() {
-        showSaveIndicator('Saving...');
-        // Debounce: wait 400ms after last edit before saving to server
+        showSave('saving...');
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(async () => {
             try {
@@ -237,50 +256,48 @@
                     body: JSON.stringify(data)
                 });
                 if (!res.ok) throw new Error('Save failed');
-                showSaveIndicator('Saved');
+                showSave('saved');
             } catch (e) {
                 console.error('Save error:', e);
-                showSaveIndicator('Save failed', true);
+                showSave('save failed', true);
             }
         }, 400);
     }
 
-    function showSaveIndicator(text, isError) {
+    function showSave(text, isError) {
         const el = document.getElementById('save-indicator');
-        el.textContent = text || 'Saved';
-        el.style.background = isError ? '#ef4444' : '#22c55e';
+        el.textContent = '// ' + text;
+        el.style.background = '#0a0a0a';
+        el.style.color = isError ? '#ef4444' : '#4ade80';
+        el.style.borderColor = isError ? '#3a0a0a' : '#0a2a0a';
         el.classList.add('show');
         clearTimeout(el._t);
         el._t = setTimeout(() => el.classList.remove('show'), 1500);
     }
 
     async function resetData() {
-        if (!confirm('Reset all data to defaults? This cannot be undone.')) return;
-        // Reload defaults from server by deleting and re-fetching
+        if (!confirm('Reset all data to defaults?')) return;
         try {
-            const res = await fetch(API_URL, {
+            await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     totalAuthorized: 10000000,
                     optionPool: 1500000,
                     shareholders: [
-                        { name: 'Alice Johnson (Founder)',  type: 'Common',         shares: 3000000, investment: '$0' },
-                        { name: 'Bob Smith (Founder)',      type: 'Common',         shares: 2000000, investment: '$0' },
-                        { name: 'Venture Capital Fund I',   type: 'Preferred A',    shares: 1500000, investment: '$1,500,000' },
-                        { name: 'Angel Investor Group',     type: 'Preferred Seed', shares: 500000,  investment: '$250,000' },
-                        { name: 'Carol Davis (Employee)',   type: 'Option',         shares: 350000,  investment: '$0' },
-                        { name: 'Dan Lee (Employee)',       type: 'Option',         shares: 150000,  investment: '$0' },
+                        { name: 'Alice Johnson',    type: 'Founder',   shares: 3000000, investment: '$0' },
+                        { name: 'Bob Smith',         type: 'Founder',   shares: 2000000, investment: '$0' },
+                        { name: 'VC Fund I',         type: 'Investor',  shares: 1500000, investment: '$1,500,000' },
+                        { name: 'Angel Group',       type: 'Investor',  shares: 500000,  investment: '$250,000' },
+                        { name: 'Carol Davis',       type: 'Options',   shares: 350000,  investment: '$0' },
+                        { name: 'Dan Lee',           type: 'Employee',  shares: 150000,  investment: '$0' },
                     ]
                 })
             });
-            if (!res.ok) throw new Error('Reset failed');
             await loadData();
             renderAll();
-            showSaveIndicator('Reset complete');
-        } catch (e) {
-            showSaveIndicator('Reset failed', true);
-        }
+            showSave('reset complete');
+        } catch (e) { showSave('reset failed', true); }
     }
 
     // --- Auth ---
@@ -290,10 +307,10 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             document.body.style.alignItems = 'flex-start';
-            showSaveIndicator('Loading...');
+            showSave('loading...');
             await loadData();
             renderAll();
-            showSaveIndicator('Loaded');
+            showSave('loaded');
         } else {
             document.getElementById('error-msg').style.display = 'block';
             input.value = '';
@@ -311,153 +328,169 @@
 
     document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
-    // --- Render ---
-    function renderAll() {
-        renderSummary();
-        renderChart();
+    // --- Mode toggle ---
+    function setMode(mode) {
+        editMode = mode;
+        document.getElementById('toggle-shares').classList.toggle('active', mode === 'shares');
+        document.getElementById('toggle-ownership').classList.toggle('active', mode === 'ownership');
         renderTable();
     }
 
-    function getTotalIssued() {
-        return data.shareholders.reduce((s, h) => s + h.shares, 0);
-    }
+    // --- Render ---
+    function renderAll() { renderSummary(); renderChart(); renderTable(); }
+
+    function getTotalIssued() { return data.shareholders.reduce((s, h) => s + h.shares, 0); }
 
     function renderSummary() {
-        const totalIssued = getTotalIssued();
+        const total = getTotalIssued();
         document.getElementById('summary-cards').innerHTML = `
             <div class="card">
-                <div class="label">Total Shares Authorized</div>
+                <div class="label">authorized</div>
                 <input class="edit-summary" type="text" value="${data.totalAuthorized.toLocaleString()}"
-                    onchange="updateAuthorized(this)" onfocus="this.value=this.value.replace(/,/g,'');"
+                    onchange="data.totalAuthorized=parseInt(this.value.replace(/,/g,''))||0;saveData();renderSummary();"
+                    onfocus="this.value=this.value.replace(/,/g,'');"
                     onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();">
             </div>
             <div class="card">
-                <div class="label">Shares Issued</div>
-                <div class="value">${totalIssued.toLocaleString()}</div>
+                <div class="label">issued</div>
+                <div class="value">${total.toLocaleString()}</div>
             </div>
             <div class="card">
-                <div class="label">Option Pool</div>
+                <div class="label">option pool</div>
                 <input class="edit-summary" type="text" value="${data.optionPool.toLocaleString()}"
-                    onchange="updateOptionPool(this)" onfocus="this.value=this.value.replace(/,/g,'');"
+                    onchange="data.optionPool=parseInt(this.value.replace(/,/g,''))||0;saveData();renderSummary();"
+                    onfocus="this.value=this.value.replace(/,/g,'');"
                     onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();">
             </div>
             <div class="card">
-                <div class="label">Shareholders</div>
+                <div class="label">holders</div>
                 <div class="value">${data.shareholders.length}</div>
             </div>`;
-    }
-
-    function updateAuthorized(el) {
-        data.totalAuthorized = parseInt(el.value.replace(/,/g, '')) || 0;
-        saveData();
-    }
-
-    function updateOptionPool(el) {
-        data.optionPool = parseInt(el.value.replace(/,/g, '')) || 0;
-        saveData();
     }
 
     function renderChart() {
         const svg = document.getElementById('pie-chart');
         const legend = document.getElementById('legend');
-        svg.innerHTML = '';
-        legend.innerHTML = '';
+        svg.innerHTML = ''; legend.innerHTML = '';
         const total = getTotalIssued();
         if (total === 0) return;
-
-        let cumulative = 0;
+        let cum = 0;
         const cx = 100, cy = 100, r = 90;
 
         data.shareholders.forEach((h, i) => {
             const pct = h.shares / total;
             if (pct <= 0) return;
-            const startAngle = cumulative * 2 * Math.PI - Math.PI / 2;
-            cumulative += pct;
-            const endAngle = cumulative * 2 * Math.PI - Math.PI / 2;
-            const largeArc = pct > 0.5 ? 1 : 0;
-            const x1 = cx + r * Math.cos(startAngle);
-            const y1 = cy + r * Math.sin(startAngle);
-            const x2 = cx + r * Math.cos(endAngle);
-            const y2 = cy + r * Math.sin(endAngle);
             const color = COLORS[i % COLORS.length];
 
             if (data.shareholders.length === 1) {
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
-                circle.setAttribute('r', r); circle.setAttribute('fill', color);
-                svg.appendChild(circle);
+                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r); c.setAttribute('fill', color);
+                svg.appendChild(c);
             } else {
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z`);
-                path.setAttribute('fill', color);
-                svg.appendChild(path);
+                const a1 = cum * 2 * Math.PI - Math.PI / 2;
+                cum += pct;
+                const a2 = cum * 2 * Math.PI - Math.PI / 2;
+                const la = pct > 0.5 ? 1 : 0;
+                const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                p.setAttribute('d', `M${cx},${cy} L${cx+r*Math.cos(a1)},${cy+r*Math.sin(a1)} A${r},${r} 0 ${la},1 ${cx+r*Math.cos(a2)},${cy+r*Math.sin(a2)} Z`);
+                p.setAttribute('fill', color);
+                svg.appendChild(p);
+                if (!cum) cum += pct; // fallback
             }
 
             legend.innerHTML += `<div class="legend-item">
                 <div class="legend-dot" style="background:${color}"></div>
-                <span>${h.name.split('(')[0].trim()} — ${(pct * 100).toFixed(1)}%</span>
+                <span>${esc(h.name)} ${(pct*100).toFixed(1)}%</span>
             </div>`;
         });
     }
 
-    function badgeClass(type) {
-        if (type.startsWith('Preferred')) return 'badge-preferred';
-        if (type === 'Option' || type === 'Warrant') return 'badge-option';
-        return 'badge-common';
+    function badgeCls(type) {
+        const map = { 'Founder':'badge-founder', 'Investor':'badge-investor', 'Options':'badge-options', 'Advisor':'badge-advisor', 'Employee':'badge-employee' };
+        return map[type] || 'badge-founder';
     }
 
     function renderTable() {
         const tbody = document.getElementById('table-body');
         const total = getTotalIssued();
+        const sharesEditable = editMode === 'shares';
+
+        // Update column headers
+        document.getElementById('col-shares').textContent = sharesEditable ? 'shares (edit)' : 'shares';
+        document.getElementById('col-pct').textContent = sharesEditable ? 'ownership %' : 'ownership % (edit)';
+
         tbody.innerHTML = data.shareholders.map((h, i) => {
-            const pct = total > 0 ? ((h.shares / total) * 100).toFixed(2) : '0.00';
-            const typeOptions = SHARE_TYPES.map(t =>
-                `<option value="${t}" ${t === h.type ? 'selected' : ''}>${t}</option>`
-            ).join('');
+            const pct = total > 0 ? ((h.shares / total) * 100) : 0;
+            const typeOpts = HOLDER_TYPES.map(t => `<option value="${t}" ${t===h.type?'selected':''}>${t}</option>`).join('');
+
+            const sharesCell = sharesEditable
+                ? `<input class="cell-input" type="text" value="${h.shares.toLocaleString()}"
+                    onfocus="this.value=this.value.replace(/,/g,'');"
+                    onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();"
+                    onchange="updateShares(${i},this.value)">`
+                : `<span style="color:#555">${h.shares.toLocaleString()}</span>`;
+
+            const pctCell = sharesEditable
+                ? `<span class="pct">${pct.toFixed(2)}%</span>`
+                : `<input class="cell-input editable-pct" type="text" value="${pct.toFixed(2)}"
+                    onchange="updateOwnership(${i},this.value)">`;
 
             return `<tr draggable="true" data-index="${i}">
                 <td><span class="drag-handle">&#x2630;</span></td>
-                <td><input class="cell-input" value="${escapeHtml(h.name)}" onchange="updateField(${i},'name',this.value)"></td>
-                <td><select class="cell-input" onchange="updateField(${i},'type',this.value)">${typeOptions}</select></td>
-                <td><input class="cell-input" type="text" value="${h.shares.toLocaleString()}"
-                    onfocus="this.value=this.value.replace(/,/g,'');"
-                    onblur="this.value=Number(this.value.replace(/,/g,'')||0).toLocaleString();"
-                    onchange="updateField(${i},'shares',this.value)"></td>
-                <td class="pct">${pct}%</td>
-                <td><input class="cell-input" value="${escapeHtml(h.investment)}" onchange="updateField(${i},'investment',this.value)"></td>
+                <td><input class="cell-input" value="${esc(h.name)}" onchange="updateField(${i},'name',this.value)"></td>
+                <td><select class="cell-input" onchange="updateField(${i},'type',this.value)">${typeOpts}</select></td>
+                <td>${sharesCell}</td>
+                <td>${pctCell}</td>
+                <td><input class="cell-input" value="${esc(h.investment)}" onchange="updateField(${i},'investment',this.value)"></td>
                 <td>
                     <div class="row-actions">
-                        <button class="icon-btn move-btn" title="Move up" onclick="moveRow(${i},-1)" ${i===0?'disabled style="opacity:0.3"':''}>&#x25B2;</button>
-                        <button class="icon-btn move-btn" title="Move down" onclick="moveRow(${i},1)" ${i===data.shareholders.length-1?'disabled style="opacity:0.3"':''}>&#x25BC;</button>
-                        <button class="icon-btn" title="Delete" onclick="deleteRow(${i})">&#x2715;</button>
+                        <button class="icon-btn move-btn" onclick="moveRow(${i},-1)" ${i===0?'disabled style="opacity:0.15"':''}>&#x25B2;</button>
+                        <button class="icon-btn move-btn" onclick="moveRow(${i},1)" ${i===data.shareholders.length-1?'disabled style="opacity:0.15"':''}>&#x25BC;</button>
+                        <button class="icon-btn" onclick="deleteRow(${i})">&#x2715;</button>
                     </div>
                 </td>
             </tr>`;
         }).join('');
-
         initDragAndDrop();
     }
 
-    function escapeHtml(s) {
-        return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     // --- Edit actions ---
     function updateField(i, field, value) {
-        if (field === 'shares') {
-            data.shareholders[i].shares = parseInt(value.replace(/,/g, '')) || 0;
+        data.shareholders[i][field] = value;
+        saveData(); renderAll();
+    }
+
+    function updateShares(i, value) {
+        data.shareholders[i].shares = parseInt(value.replace(/,/g, '')) || 0;
+        saveData(); renderAll();
+    }
+
+    function updateOwnership(i, value) {
+        const newPct = parseFloat(value) || 0;
+        const total = getTotalIssued();
+        if (total === 0) return;
+        // Recalculate this shareholder's shares to match the desired %
+        // Formula: new_shares = (newPct / 100) * total
+        // But total includes this shareholder's old shares, so we need:
+        // total_others = total - old_shares
+        // new_shares = (newPct / (100 - newPct)) * total_others
+        // This ensures the % is correct relative to the new total
+        const totalOthers = total - data.shareholders[i].shares;
+        if (newPct >= 100) {
+            data.shareholders[i].shares = totalOthers * 99; // cap at ~99%
+        } else if (newPct <= 0) {
+            data.shareholders[i].shares = 0;
         } else {
-            data.shareholders[i][field] = value;
+            data.shareholders[i].shares = Math.round((newPct / (100 - newPct)) * totalOthers);
         }
-        saveData();
-        renderAll();
+        saveData(); renderAll();
     }
 
     function addShareholder() {
-        data.shareholders.push({ name: 'New Shareholder', type: 'Common', shares: 0, investment: '$0' });
-        saveData();
-        renderAll();
-        // Focus the new row's name field
+        data.shareholders.push({ name: 'New Holder', type: 'Founder', shares: 0, investment: '$0' });
+        saveData(); renderAll();
         setTimeout(() => {
             const inputs = document.querySelectorAll('#table-body tr:last-child .cell-input');
             if (inputs[0]) { inputs[0].focus(); inputs[0].select(); }
@@ -465,54 +498,45 @@
     }
 
     function deleteRow(i) {
-        if (data.shareholders.length <= 1) { alert('Must have at least one shareholder.'); return; }
-        const name = data.shareholders[i].name;
-        if (!confirm(`Remove "${name}"?`)) return;
+        if (data.shareholders.length <= 1) return;
+        if (!confirm(`Remove "${data.shareholders[i].name}"?`)) return;
         data.shareholders.splice(i, 1);
-        saveData();
-        renderAll();
+        saveData(); renderAll();
     }
 
     function moveRow(i, dir) {
         const j = i + dir;
         if (j < 0 || j >= data.shareholders.length) return;
         [data.shareholders[i], data.shareholders[j]] = [data.shareholders[j], data.shareholders[i]];
-        saveData();
-        renderAll();
+        saveData(); renderAll();
     }
 
-    // --- Drag & Drop reorder ---
+    // --- Drag & Drop ---
     function initDragAndDrop() {
         const tbody = document.getElementById('table-body');
         let dragIdx = null;
-
         tbody.querySelectorAll('tr').forEach(row => {
             row.addEventListener('dragstart', e => {
                 dragIdx = parseInt(row.dataset.index);
                 row.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
             });
-
             row.addEventListener('dragend', () => {
                 row.classList.remove('dragging');
                 tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
             });
-
             row.addEventListener('dragover', e => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault(); e.dataTransfer.dropEffect = 'move';
                 tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
                 row.classList.add('drag-over');
             });
-
             row.addEventListener('drop', e => {
                 e.preventDefault();
                 const dropIdx = parseInt(row.dataset.index);
                 if (dragIdx !== null && dragIdx !== dropIdx) {
                     const [moved] = data.shareholders.splice(dragIdx, 1);
                     data.shareholders.splice(dropIdx, 0, moved);
-                    saveData();
-                    renderAll();
+                    saveData(); renderAll();
                 }
                 dragIdx = null;
             });
