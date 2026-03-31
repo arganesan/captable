@@ -1,6 +1,7 @@
 {
   "name": "cap-table",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@vercel/kv": "^2.0.0"
   }
