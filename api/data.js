@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import Redis from 'ioredis';
 
 const KV_KEY = 'captable_data';
 
@@ -15,29 +15,18 @@ const DEFAULT_DATA = {
     ]
 };
 
+let redis;
+
 function getRedis() {
-    // Direct REST API vars (ideal)
-    const restUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-    const restToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-    if (restUrl && restToken) {
-        return new Redis({ url: restUrl, token: restToken });
+    if (!process.env.REDIS_URL) return null;
+    if (!redis) {
+        redis = new Redis(process.env.REDIS_URL, {
+            maxRetriesPerRequest: 1,
+            connectTimeout: 5000,
+            lazyConnect: true,
+        });
     }
-
-    // Parse REDIS_URL (redis://default:TOKEN@hostname:port) to derive REST API creds
-    const redisUrl = process.env.REDIS_URL;
-    if (redisUrl) {
-        try {
-            const parsed = new URL(redisUrl);
-            const host = parsed.hostname;           // e.g. us1-xxx.upstash.io
-            const token = parsed.password;           // the auth token
-            const restApiUrl = `https://${host}`;
-            if (host && token) {
-                return new Redis({ url: restApiUrl, token });
-            }
-        } catch (e) {}
-    }
-
-    return null;
+    return redis;
 }
 
 export default async function handler(req, res) {
@@ -49,16 +38,19 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    const redis = getRedis();
+    const client = getRedis();
 
-    if (!redis) {
+    if (!client) {
         if (req.method === 'GET') return res.status(200).json(DEFAULT_DATA);
-        return res.status(503).json({ error: 'Redis not connected' });
+        return res.status(503).json({ error: 'REDIS_URL not set' });
     }
 
     try {
+        await client.connect().catch(() => {});
+
         if (req.method === 'GET') {
-            const data = await redis.get(KV_KEY);
+            const raw = await client.get(KV_KEY);
+            const data = raw ? JSON.parse(raw) : null;
             return res.status(200).json(data || DEFAULT_DATA);
         }
 
@@ -67,7 +59,7 @@ export default async function handler(req, res) {
             if (!body || !Array.isArray(body.shareholders)) {
                 return res.status(400).json({ error: 'Invalid data' });
             }
-            await redis.set(KV_KEY, JSON.stringify(body));
+            await client.set(KV_KEY, JSON.stringify(body));
             return res.status(200).json({ ok: true });
         }
 
