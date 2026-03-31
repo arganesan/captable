@@ -1,4 +1,4 @@
-import { createClient } from '@vercel/kv';
+import { kv } from '@vercel/kv';
 
 const KV_KEY = 'captable_data';
 
@@ -15,13 +15,6 @@ const DEFAULT_DATA = {
     ]
 };
 
-function getKV() {
-    const url = process.env.KV_REST_API_URL;
-    const token = process.env.KV_REST_API_TOKEN;
-    if (!url || !token) return null;
-    return createClient({ url, token });
-}
-
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -29,16 +22,6 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
-    }
-
-    const kv = getKV();
-
-    if (!kv) {
-        // KV not configured — return defaults for GET, reject POST
-        if (req.method === 'GET') {
-            return res.status(200).json(DEFAULT_DATA);
-        }
-        return res.status(503).json({ error: 'KV storage not connected. Add a KV database in Vercel Dashboard → Storage.' });
     }
 
     try {
@@ -59,6 +42,11 @@ export default async function handler(req, res) {
         res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
         console.error('KV error:', err);
-        res.status(500).json({ error: err.message || 'Server error' });
+        res.status(500).json({
+            error: err.message || 'Server error',
+            hasKvUrl: !!process.env.KV_REST_API_URL,
+            hasKvToken: !!process.env.KV_REST_API_TOKEN,
+            hasKvRedisUrl: !!process.env.KV_URL
+        });
     }
 }
