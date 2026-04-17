@@ -1,8 +1,5 @@
 {
   "name": "cap-table",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "ioredis": "^5.4.1"
-  }
+  "type": "module"
 }

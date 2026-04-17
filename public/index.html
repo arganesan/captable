@@ -186,6 +186,9 @@
         <h1>// CAP TABLE</h1>
         <div class="header-actions">
             <button class="btn btn-primary" onclick="addShareholder()">+ add</button>
+            <button class="btn btn-ghost" onclick="exportJson()">export</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">import</button>
+            <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importJson(event)">
             <button class="btn btn-danger" onclick="resetData()">reset</button>
             <button class="btn btn-ghost" onclick="logout()">lock</button>
         </div>
@@ -228,14 +231,26 @@
 
 <script>
     const PASSWORD = '999999';
-    const API_URL = '/api/data';
+    const STORAGE_KEY = 'captable_data';
     const HOLDER_TYPES = ['Founder', 'Investor', 'Advisor', 'Employee'];
     const COLORS = ['#4ade80','#22c55e','#16a34a','#15803d','#166534','#14532d','#0a3d1f','#052e16','#2dd4bf','#34d399'];
     const OPTIONS_COLOR = '#1a1a1a';
 
+    const DEFAULT_DATA = {
+        totalAuthorized: 10000000,
+        optionPool: 0,
+        shareholders: [
+            { name: 'Alice Johnson', type: 'Founder',  shares: 3000000, investment: '$0' },
+            { name: 'Bob Smith',     type: 'Founder',  shares: 2000000, investment: '$0' },
+            { name: 'VC Fund I',     type: 'Investor', shares: 1500000, investment: '$1,500,000' },
+            { name: 'Angel Group',   type: 'Investor', shares: 500000,  investment: '$250,000' },
+            { name: 'Carol Davis',   type: 'Employee', shares: 350000,  investment: '$0' },
+            { name: 'Dan Lee',       type: 'Employee', shares: 150000,  investment: '$0' },
+        ]
+    };
+
     let data;
     let editMode = 'shares';
-    let saveTimeout = null;
 
     // --- Computed: options pool shares = totalAuthorized - sum(shareholders) ---
     function getShareholderTotal() {
@@ -249,35 +264,69 @@
         return data.totalAuthorized;
     }
 
-    // --- API ---
-    async function loadData() {
+    // --- Storage ---
+    function loadData() {
         try {
-            const res = await fetch(API_URL);
-            if (!res.ok) throw new Error('Failed to load');
-            data = await res.json();
+            const raw = localStorage.getItem(STORAGE_KEY);
+            data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_DATA));
         } catch (e) {
             console.error('Load error:', e);
-            showSave('failed to load', true);
+            data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            showSave('load failed', true);
         }
     }
 
-    async function saveData() {
-        showSave('saving...');
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(async () => {
+    function saveData() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            showSave('saved');
+        } catch (e) {
+            console.error('Save error:', e);
+            showSave('save failed', true);
+        }
+    }
+
+    function isValidData(d) {
+        return d && typeof d === 'object'
+            && typeof d.totalAuthorized === 'number'
+            && Array.isArray(d.shareholders)
+            && d.shareholders.every(h => h && typeof h.name === 'string' && typeof h.type === 'string' && typeof h.shares === 'number');
+    }
+
+    function exportJson() {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const stamp = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `captable-${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showSave('exported');
+    }
+
+    function importJson(event) {
+        const file = event.target.files[0];
+        event.target.value = '';
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (!res.ok) throw new Error('Save failed');
-                showSave('saved');
-            } catch (e) {
-                console.error('Save error:', e);
-                showSave('save failed', true);
+                const parsed = JSON.parse(e.target.result);
+                if (!isValidData(parsed)) throw new Error('invalid schema');
+                if (!confirm('Replace current cap table with imported data?')) return;
+                data = parsed;
+                saveData();
+                renderAll();
+                showSave('imported');
+            } catch (err) {
+                console.error('Import error:', err);
+                showSave('import failed', true);
             }
-        }, 400);
+        };
+        reader.readAsText(file);
     }
 
     function showSave(text, isError) {
@@ -291,40 +340,22 @@
         el._t = setTimeout(() => el.classList.remove('show'), 1500);
     }
 
-    async function resetData() {
+    function resetData() {
         if (!confirm('Reset all data to defaults?')) return;
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    totalAuthorized: 10000000,
-                    optionPool: 0,
-                    shareholders: [
-                        { name: 'Alice Johnson', type: 'Founder',  shares: 3000000, investment: '$0' },
-                        { name: 'Bob Smith',     type: 'Founder',  shares: 2000000, investment: '$0' },
-                        { name: 'VC Fund I',     type: 'Investor', shares: 1500000, investment: '$1,500,000' },
-                        { name: 'Angel Group',   type: 'Investor', shares: 500000,  investment: '$250,000' },
-                        { name: 'Carol Davis',   type: 'Employee', shares: 350000,  investment: '$0' },
-                        { name: 'Dan Lee',       type: 'Employee', shares: 150000,  investment: '$0' },
-                    ]
-                })
-            });
-            await loadData();
-            renderAll();
-            showSave('reset complete');
-        } catch (e) { showSave('reset failed', true); }
+        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        saveData();
+        renderAll();
+        showSave('reset complete');
     }
 
     // --- Auth ---
-    async function login() {
+    function login() {
         const input = document.getElementById('password');
         if (input.value === PASSWORD) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             document.body.style.alignItems = 'flex-start';
-            showSave('loading...');
-            await loadData();
+            loadData();
             renderAll();
             showSave('loaded');
         } else {
